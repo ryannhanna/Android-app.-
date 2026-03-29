@@ -1,6 +1,10 @@
 package com.smartfilemanager.app.ui.screen
 
 import android.app.Application
+import android.net.Uri
+import android.provider.DocumentsContract
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -14,6 +18,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.FolderOpen
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -39,6 +44,16 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.smartfilemanager.app.ui.components.ConditionRow
 import com.smartfilemanager.app.ui.viewmodel.RuleBuilderViewModel
 
+private fun treeUriToPath(uri: Uri): String {
+    val docId = DocumentsContract.getTreeDocumentId(uri)
+    return if (docId.startsWith("primary:")) {
+        "/storage/emulated/0/${docId.removePrefix("primary:")}"
+    } else {
+        val parts = docId.split(":", limit = 2)
+        "/storage/${parts[0]}/${parts.getOrElse(1) { "" }}"
+    }
+}
+
 @Composable
 fun RuleBuilderScreen(
     ruleId: Int?,
@@ -53,6 +68,14 @@ fun RuleBuilderScreen(
         factory = RuleBuilderViewModel.factory(application, ruleId)
     )
     val uiState by vm.uiState.collectAsState()
+
+    val folderPickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.OpenDocumentTree()
+    ) { uri ->
+        if (uri != null) {
+            vm.updateTargetDirectory(treeUriToPath(uri))
+        }
+    }
 
     // Navigate back automatically after a successful save
     LaunchedEffect(uiState.saveSuccess) {
@@ -173,9 +196,17 @@ fun RuleBuilderScreen(
             OutlinedTextField(
                 value = uiState.targetDirectory,
                 onValueChange = { vm.updateTargetDirectory(it) },
-                placeholder = { Text("e.g. /DCIM/Camera") },
+                placeholder = { Text("e.g. /storage/emulated/0/DCIM") },
                 singleLine = true,
                 supportingText = { Text("Leave blank to scan all storage") },
+                trailingIcon = {
+                    IconButton(onClick = { folderPickerLauncher.launch(null) }) {
+                        Icon(
+                            imageVector = Icons.Filled.FolderOpen,
+                            contentDescription = "Browse folders"
+                        )
+                    }
+                },
                 modifier = Modifier.fillMaxWidth()
             )
 
