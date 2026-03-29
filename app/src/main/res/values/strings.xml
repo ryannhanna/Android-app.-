@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">SmartFileManager</string>
+    <string name="tab_files">Files</string>
+    <string name="tab_rules">Rules</string>
+    <string name="tab_run">Run</string>
+    <string name="tab_history">History</string>
+    <string name="settings">Settings</string>
+</resources>
