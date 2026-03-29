@@ -19,13 +19,19 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: Set up Gradle 8.6
+      - name: Install Android SDK 36
+        run: |
+          echo "y" | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager \
+            "platforms;android-36" \
+            "build-tools;35.0.0"
+
+      - name: Set up Gradle 8.7
         uses: gradle/actions/setup-gradle@v4
         with:
-          gradle-version: '8.6'
+          gradle-version: '8.7'
 
       - name: Generate Gradle wrapper jar
-        run: gradle wrapper --gradle-version 8.6 --distribution-type bin
+        run: gradle wrapper --gradle-version 8.7 --distribution-type bin
 
       - name: Make gradlew executable
         run: chmod +x gradlew
