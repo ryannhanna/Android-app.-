@@ -1,5 +1,6 @@
 package com.smartfilemanager.app.ui.navigation
 
+import android.net.Uri
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.PlayArrow
@@ -71,7 +72,13 @@ fun AppNavHost(navController: NavHostController, modifier: Modifier = Modifier) 
         startDestination = Screen.Files.route,
         modifier = modifier
     ) {
-        composable(Screen.Files.route) { FileBrowserScreen() }
+        composable(Screen.Files.route) {
+            FileBrowserScreen(
+                onCreateRuleForFolder = { folder ->
+                    navController.navigate("rule_builder?folder=${Uri.encode(folder)}")
+                }
+            )
+        }
 
         composable(Screen.Rules.route) {
             RulesListScreen(
@@ -80,15 +87,19 @@ fun AppNavHost(navController: NavHostController, modifier: Modifier = Modifier) 
             )
         }
         composable(
-            route = "rule_builder?ruleId={ruleId}",
-            arguments = listOf(navArgument("ruleId") {
-                type = NavType.IntType
-                defaultValue = -1
-            })
+            route = "rule_builder?ruleId={ruleId}&folder={folder}",
+            arguments = listOf(
+                navArgument("ruleId") { type = NavType.IntType; defaultValue = -1 },
+                navArgument("folder") { type = NavType.StringType; defaultValue = "" }
+            )
         ) { backStackEntry ->
             val ruleId = backStackEntry.arguments?.getInt("ruleId").takeIf { it != -1 }
+            val folder = backStackEntry.arguments?.getString("folder")
+                ?.let { Uri.decode(it) }
+                ?.ifEmpty { null }
             RuleBuilderScreen(
                 ruleId = ruleId,
+                prefilledFolder = folder,
                 onNavigateBack = { navController.popBackStack() }
             )
         }

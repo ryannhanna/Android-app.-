@@ -15,6 +15,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
@@ -25,11 +26,14 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -41,12 +45,16 @@ import com.smartfilemanager.app.ui.components.VideoListItem
 import com.smartfilemanager.app.ui.viewmodel.FileBrowserViewModel
 
 @Composable
-fun FileBrowserScreen(modifier: Modifier = Modifier) {
+fun FileBrowserScreen(
+    onCreateRuleForFolder: (String) -> Unit = {},
+    modifier: Modifier = Modifier
+) {
     val context = LocalContext.current
     val application = context.applicationContext as Application
     val vm: FileBrowserViewModel = viewModel(factory = FileBrowserViewModel.factory(application))
     val uiState by vm.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
+    var longPressedFolder by remember { mutableStateOf<String?>(null) }
 
     LaunchedEffect(uiState.snackbarMessage) {
         uiState.snackbarMessage?.let { message ->
@@ -94,6 +102,7 @@ fun FileBrowserScreen(modifier: Modifier = Modifier) {
                         folders = uiState.folders,
                         selectedFolder = uiState.selectedFolder,
                         onFolderSelected = { vm.setFolder(it) },
+                        onFolderLongPress = { folder -> longPressedFolder = folder },
                         modifier = Modifier.weight(1f)
                     )
                     SortDropdownMenu(
@@ -182,6 +191,25 @@ fun FileBrowserScreen(modifier: Modifier = Modifier) {
         SnackbarHost(
             hostState = snackbarHostState,
             modifier = Modifier.align(Alignment.BottomCenter)
+        )
+    }
+
+    // Long-press folder dialog
+    longPressedFolder?.let { folder ->
+        val folderName = folder.trimEnd('/').substringAfterLast('/').ifEmpty { folder }
+        AlertDialog(
+            onDismissRequest = { longPressedFolder = null },
+            title = { Text(folderName) },
+            text = { Text("Create a deletion rule for all videos in this folder?") },
+            confirmButton = {
+                Button(onClick = {
+                    longPressedFolder = null
+                    onCreateRuleForFolder(folder)
+                }) { Text("Create Rule") }
+            },
+            dismissButton = {
+                TextButton(onClick = { longPressedFolder = null }) { Text("Cancel") }
+            }
         )
     }
 }

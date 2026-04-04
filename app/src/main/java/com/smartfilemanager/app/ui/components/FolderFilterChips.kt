@@ -1,5 +1,6 @@
 package com.smartfilemanager.app.ui.components
 
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
@@ -8,6 +9,7 @@ import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.unit.dp
 
 @Composable
@@ -15,6 +17,7 @@ fun FolderFilterChips(
     folders: List<String>,
     selectedFolder: String?,
     onFolderSelected: (String?) -> Unit,
+    onFolderLongPress: ((String) -> Unit)? = null,
     modifier: Modifier = Modifier
 ) {
     Row(
@@ -35,7 +38,13 @@ fun FolderFilterChips(
                 selected = folder == selectedFolder,
                 onClick = { onFolderSelected(folder) },
                 label = { Text(label) },
-                modifier = Modifier.padding(end = 8.dp)
+                modifier = Modifier
+                    .padding(end = 8.dp)
+                    .pointerInput(folder) {
+                        detectTapGestures(
+                            onLongPress = { onFolderLongPress?.invoke(folder) }
+                        )
+                    }
             )
         }
     }

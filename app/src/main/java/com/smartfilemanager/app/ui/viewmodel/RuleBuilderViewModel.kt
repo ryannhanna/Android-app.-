@@ -158,6 +158,23 @@ class RuleBuilderViewModel(
         }
     }
 
+    fun prefillForFolder(folderPath: String) {
+        val folderName = folderPath.trimEnd('/').substringAfterLast('/').ifEmpty { folderPath }
+        val durationCondition = ConditionDraft(
+            field = ConditionField.DURATION,
+            operator = ConditionOperator.LESS_THAN,
+            value = "59",
+            unit = "seconds"
+        )
+        _uiState.update {
+            it.copy(
+                name = folderName,
+                targetDirectory = folderPath,
+                conditions = listOf(durationCondition)
+            )
+        }
+    }
+
     fun clearSaveSuccess() {
         _uiState.update { it.copy(saveSuccess = false) }
     }

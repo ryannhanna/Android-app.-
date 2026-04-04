@@ -58,6 +58,7 @@ private fun treeUriToPath(uri: Uri): String {
 fun RuleBuilderScreen(
     ruleId: Int?,
     onNavigateBack: () -> Unit,
+    prefilledFolder: String? = null,
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
@@ -74,6 +75,13 @@ fun RuleBuilderScreen(
     ) { uri ->
         if (uri != null) {
             vm.updateTargetDirectory(treeUriToPath(uri))
+        }
+    }
+
+    // Pre-fill name, folder, and starter condition when launched from the file browser
+    LaunchedEffect(prefilledFolder) {
+        if (prefilledFolder != null && ruleId == null) {
+            vm.prefillForFolder(prefilledFolder)
         }
     }
 
