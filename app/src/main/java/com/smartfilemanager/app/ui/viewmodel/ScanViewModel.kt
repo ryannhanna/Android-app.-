@@ -18,6 +18,7 @@ import com.smartfilemanager.app.data.repository.VideoRepository
 import com.smartfilemanager.app.domain.engine.RuleEngine
 import com.smartfilemanager.app.domain.model.ScannedFile
 import com.smartfilemanager.app.util.FileRefreshBus
+import com.smartfilemanager.app.util.PreselectRuleBus
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -34,6 +35,7 @@ data class ScanUiState(
     val scanResults: List<ScannedFile> = emptyList(),
     val selectedIds: Set<Long> = emptySet(),
     val deletionResult: DeletionResult? = null,
+    val pendingPreselectId: Int? = null,
     val error: String? = null
 )
 
@@ -59,7 +61,30 @@ class ScanViewModel(
     init {
         viewModelScope.launch {
             ruleRepository.getAllRules().collect { rules ->
-                _uiState.update { it.copy(savedRules = rules) }
+                val pending = _uiState.value.pendingPreselectId
+                val autoSelect = if (pending != null) rules.find { it.id == pending } else null
+                _uiState.update {
+                    it.copy(
+                        savedRules = rules,
+                        selectedRule = autoSelect ?: it.selectedRule,
+                        targetDirectory = autoSelect?.targetDirectory ?: it.targetDirectory,
+                        pendingPreselectId = if (autoSelect != null) null else pending
+                    )
+                }
+                if (autoSelect != null) PreselectRuleBus.consume()
+            }
+        }
+        viewModelScope.launch {
+            PreselectRuleBus.pendingRuleId.collect { ruleId ->
+                if (ruleId == null) return@collect
+                val rule = _uiState.value.savedRules.find { it.id == ruleId }
+                if (rule != null) {
+                    selectRule(rule)
+                    PreselectRuleBus.consume()
+                } else {
+                    // Rules not loaded yet — store and resolve when they arrive
+                    _uiState.update { it.copy(pendingPreselectId = ruleId) }
+                }
             }
         }
     }

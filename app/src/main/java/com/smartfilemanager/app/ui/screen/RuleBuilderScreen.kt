@@ -58,6 +58,7 @@ private fun treeUriToPath(uri: Uri): String {
 fun RuleBuilderScreen(
     ruleId: Int?,
     onNavigateBack: () -> Unit,
+    onRuleSaved: () -> Unit = {},
     prefilledFolder: String? = null,
     modifier: Modifier = Modifier
 ) {
@@ -85,11 +86,11 @@ fun RuleBuilderScreen(
         }
     }
 
-    // Navigate back automatically after a successful save
-    LaunchedEffect(uiState.saveSuccess) {
-        if (uiState.saveSuccess) {
-            vm.clearSaveSuccess()
-            onNavigateBack()
+    // Navigate after a successful save
+    LaunchedEffect(uiState.savedRuleId) {
+        if (uiState.savedRuleId != null) {
+            vm.clearSavedRuleId()
+            onRuleSaved()
         }
     }
 

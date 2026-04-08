@@ -10,6 +10,7 @@ import com.smartfilemanager.app.data.entity.RuleEntity
 import com.smartfilemanager.app.data.repository.RuleRepository
 import com.smartfilemanager.app.domain.model.ConditionField
 import com.smartfilemanager.app.domain.model.ConditionOperator
+import com.smartfilemanager.app.util.PreselectRuleBus
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -59,7 +60,7 @@ data class RuleBuilderUiState(
     val conditions: List<ConditionDraft> = emptyList(),
     val targetDirectory: String = "",
     val isSaving: Boolean = false,
-    val saveSuccess: Boolean = false,
+    val savedRuleId: Int? = null,  // non-null signals save completed
     val error: String? = null
 )
 
@@ -175,8 +176,8 @@ class RuleBuilderViewModel(
         }
     }
 
-    fun clearSaveSuccess() {
-        _uiState.update { it.copy(saveSuccess = false) }
+    fun clearSavedRuleId() {
+        _uiState.update { it.copy(savedRuleId = null) }
     }
 
     fun saveRule() {
@@ -226,8 +227,10 @@ class RuleBuilderViewModel(
                     unit = draft.unit
                 )
             }
-            ruleRepository.saveRule(ruleEntity, conditionEntities)
-            _uiState.update { it.copy(isSaving = false, saveSuccess = true) }
+            val savedId = ruleRepository.saveRule(ruleEntity, conditionEntities)
+            // Signal the Run screen to pre-select this rule (new rules only)
+            if (state.ruleId == null) PreselectRuleBus.request(savedId)
+            _uiState.update { it.copy(isSaving = false, savedRuleId = savedId) }
         }
     }
 

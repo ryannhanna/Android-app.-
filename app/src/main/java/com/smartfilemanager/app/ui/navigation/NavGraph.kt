@@ -100,7 +100,20 @@ fun AppNavHost(navController: NavHostController, modifier: Modifier = Modifier) 
             RuleBuilderScreen(
                 ruleId = ruleId,
                 prefilledFolder = folder,
-                onNavigateBack = { navController.popBackStack() }
+                onNavigateBack = { navController.popBackStack() },
+                onRuleSaved = {
+                    if (ruleId == null) {
+                        // New rule: go to Run tab with the rule pre-selected
+                        navController.popBackStack()
+                        navController.navigate(Screen.Run.route) {
+                            launchSingleTop = true
+                            restoreState = true
+                        }
+                    } else {
+                        // Edit: just go back
+                        navController.popBackStack()
+                    }
+                }
             )
         }
 

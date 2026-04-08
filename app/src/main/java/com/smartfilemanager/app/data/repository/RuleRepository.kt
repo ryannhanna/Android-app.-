@@ -18,7 +18,7 @@ class RuleRepository(private val db: AppDatabase) {
         return Pair(rule, conditions)
     }
 
-    suspend fun saveRule(rule: RuleEntity, conditions: List<ConditionEntity>) {
+    suspend fun saveRule(rule: RuleEntity, conditions: List<ConditionEntity>): Int {
         val ruleId = if (rule.id == 0) {
             db.ruleDao().insertRule(rule).toInt()
         } else {
@@ -27,6 +27,7 @@ class RuleRepository(private val db: AppDatabase) {
         }
         db.conditionDao().deleteConditionsForRule(ruleId)
         db.conditionDao().insertConditions(conditions.map { it.copy(ruleId = ruleId) })
+        return ruleId
     }
 
     suspend fun deleteRule(rule: RuleEntity) {
