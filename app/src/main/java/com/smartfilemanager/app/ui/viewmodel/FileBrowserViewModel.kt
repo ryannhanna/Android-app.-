@@ -37,7 +37,7 @@ data class FileBrowserUiState(
     val displayedFiles: List<ScannedFile> = emptyList(),
     val folders: List<String> = emptyList(),
     val selectedFolder: String? = null,
-    val sortOrder: SortOrder = SortOrder.DATE_DESC,
+    val sortOrder: SortOrder = SortOrder.DURATION_ASC,
     val isLoading: Boolean = false,
     val isSelectionMode: Boolean = false,
     val selectedIds: Set<Long> = emptySet(),
