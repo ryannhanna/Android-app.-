@@ -17,6 +17,7 @@ import com.smartfilemanager.app.data.repository.RuleRepository
 import com.smartfilemanager.app.data.repository.VideoRepository
 import com.smartfilemanager.app.domain.engine.RuleEngine
 import com.smartfilemanager.app.domain.model.ScannedFile
+import com.smartfilemanager.app.util.FileRefreshBus
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -153,6 +154,8 @@ class ScanViewModel(
                 )
             )
         }
+
+        FileRefreshBus.notifyFilesChanged()
 
         _uiState.update {
             it.copy(

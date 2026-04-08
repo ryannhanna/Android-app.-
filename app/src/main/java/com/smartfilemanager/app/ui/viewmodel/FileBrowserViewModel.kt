@@ -13,6 +13,7 @@ import com.smartfilemanager.app.data.entity.DeletionLogEntity
 import com.smartfilemanager.app.data.repository.DeletionLogRepository
 import com.smartfilemanager.app.data.repository.VideoRepository
 import com.smartfilemanager.app.domain.model.ScannedFile
+import com.smartfilemanager.app.util.FileRefreshBus
 import com.smartfilemanager.app.util.FormatUtil
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -57,6 +58,9 @@ class FileBrowserViewModel(
 
     init {
         loadFiles()
+        viewModelScope.launch {
+            FileRefreshBus.events.collect { loadFiles() }
+        }
     }
 
     fun loadFiles() {
